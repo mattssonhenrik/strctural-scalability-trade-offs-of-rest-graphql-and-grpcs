@@ -13,11 +13,11 @@ import java.util.*;
  *
  * ── Structure ────────────────────────────────────────────────────────────────
  * Each node contains:
- * - K fields with fixed-length keys ("f00".."f99") and 16-char random values
+ * - K fields with fixed-length keys ("k00".."k99") and 16-char random values
  * - F child nodes (none at leaf level)
  *
  * ── Payload predictability ───────────────────────────────────────────────────
- * Keys are zero-padded ("f00", "f01", ...) so key length is always 3 bytes.
+ * Keys are zero-padded ("k00", "k01", ...) so key length is always 3 bytes.
  * Values are always STRING_LENGTH (16) bytes.
  * Node IDs are always 6 bytes ("000000", "000001", ...).
  * → Each node contributes exactly K × 19 bytes in field data, regardless of
@@ -85,7 +85,7 @@ public class Datagenerator {
 
         Map<String, String> fields = new LinkedHashMap<>();
         for (int k = 0; k < fieldCount; k++) {
-            fields.put(String.format("f%02d", k), randomString(STRING_LENGTH));
+            fields.put(String.format("k%02d", k), randomString(STRING_LENGTH));
         }
 
         List<Node> children = new ArrayList<>();

@@ -1,0 +1,18 @@
+type Node {
+    id: String
+    k00: String
+    k01: String
+    k02: String
+    k03: String
+    k04: String
+    k05: String
+    k06: String
+    k07: String
+    k08: String
+    k09: String
+    children: [Node]
+}
+
+type Query {
+    root: Node
+}

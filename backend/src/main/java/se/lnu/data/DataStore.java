@@ -23,6 +23,7 @@ public class DataStore {
     @PostConstruct
     public void init() {
         reload(2, 2, 4, 42);
+         
     }
 
     /**
@@ -36,7 +37,11 @@ public class DataStore {
      */
     public void reload(int d, int f, int k, int seed) {
         index = new HashMap<>();
-        root = new Datagenerator(d, f, k, seed).generate();
+        Datagenerator datagenerator = new Datagenerator(d, f, k, seed);
+        root = datagenerator.generate();
+        datagenerator.printStats();
+        System.out.println("Reload has been invoked!!!!");
+        //root = new Datagenerator(d, f, k, seed).generate();
         buildIndex(root);
     }
 
@@ -76,5 +81,6 @@ public class DataStore {
         for (Node child : node.getChildren()) {
             buildIndex(child);
         }
+        
     }
 }
