@@ -1,0 +1,13 @@
+# RQ1 experiment - K-series
+Dataset includes: D=3 F=3 K=0-5
+paradigm,series,D-Target,F-Target,K-Target,run,dp1_request_count,dp2_orchestration_ops,dp3_payload_bytes,overfetch_fields,underfetch_extra_calls,status
+REST,K,3,3,1,1,14,14,10652,360,13,ok
+GraphQL,K,3,3,1,1,1,14,1826,0,0,ok
+REST,K,3,3,2,1,14,14,10652,320,13,ok
+GraphQL,K,3,3,2,1,1,14,2826,0,0,ok
+REST,K,3,3,3,1,14,14,10652,280,13,ok
+GraphQL,K,3,3,3,1,1,14,3826,0,0,ok
+REST,K,3,3,4,1,14,14,10652,240,13,ok
+GraphQL,K,3,3,4,1,1,14,4826,0,0,ok
+REST,K,3,3,5,1,14,14,10652,200,13,ok
+GraphQL,K,3,3,5,1,1,14,5826,0,0,ok

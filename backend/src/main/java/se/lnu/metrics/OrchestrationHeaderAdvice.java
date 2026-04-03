@@ -21,7 +21,6 @@ public class OrchestrationHeaderAdvice implements ResponseBodyAdvice<Object> {
     @Override
     public boolean supports(MethodParameter returnType,
             Class<? extends HttpMessageConverter<?>> converterType) {
-                System.out.println("OrchestrationHeaderAdvice supports invoked");
         return true;
     }
 
@@ -32,7 +31,6 @@ public class OrchestrationHeaderAdvice implements ResponseBodyAdvice<Object> {
             ServerHttpRequest request, ServerHttpResponse response) {
         response.getHeaders().set("X-Orchestration-Count",
                 String.valueOf(OrchestrationCounter.get()));
-                System.out.println(" OrchestrationHeaderAdvice beforeBodyWrite invoked");
         OrchestrationCounter.reset();
         return body;
     }
