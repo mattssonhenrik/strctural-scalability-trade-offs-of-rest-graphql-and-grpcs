@@ -37,7 +37,7 @@ public class TestRunner {
     private final HttpClient http = HttpClient.newHttpClient();
     private final ObjectMapper mapper = new ObjectMapper();
 
-    /** Runs all three OVAT series (D, F, K) and writes results to CSV. */
+    /** Runs all three OVAT series (D, F, K) and writes results to CSV! */
     public void run() throws IOException {
         runSeries("D", TestConfig.D_BASELINE, TestConfig.F_BASELINE, TestConfig.K_BASELINE);
         runSeries("F", TestConfig.D_BASELINE, TestConfig.F_BASELINE, TestConfig.K_BASELINE);
@@ -51,7 +51,7 @@ public class TestRunner {
      * file.
      */
     private void runSeries(String series, int dBase, int fBase, int kBase) throws IOException {
-        CsvWriter csv = new CsvWriter("results/rq1_" + series + "_series_" + buildTag(series) + ".csv", series);
+        CsvWriter csv = new CsvWriter("results/csv/rq1_" + series + "_series_" + buildTag(series) + ".csv", series);
 
         for (int value = TestConfig.SWEEP_MIN; value <= TestConfig.SWEEP_MAX; value++) {
             int d = series.equals("D") ? value : dBase;
