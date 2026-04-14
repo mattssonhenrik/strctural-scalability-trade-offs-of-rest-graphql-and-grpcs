@@ -22,7 +22,7 @@ public class DataStore {
     // TODO: RM before experiment. DEV ONLY
     @PostConstruct
     public void init() {
-        reload(2, 2, 4, 42);
+        reload(3, 2, 2, 42);
          
     }
 

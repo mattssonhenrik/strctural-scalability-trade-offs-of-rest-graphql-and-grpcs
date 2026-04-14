@@ -9,9 +9,9 @@ package se.lnu.runner;
  */
 public class TestConfig {
 
-    public static int D_BASELINE = 5;
-    public static int F_BASELINE = 5;
-    public static int K_BASELINE = 5;
+    public static int D_BASELINE = 3;
+    public static int F_BASELINE = 3;
+    public static int K_BASELINE = 3;
 
     public static int SWEEP_MIN = 0;
     // Careful rest over 10 can be exausting

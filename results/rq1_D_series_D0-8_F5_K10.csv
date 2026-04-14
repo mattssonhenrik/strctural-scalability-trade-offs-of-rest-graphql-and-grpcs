@@ -1,5 +1,5 @@
 # RQ1 experiment - D-series
-Dataset includes: D=0-10 F=5 K=5
+Dataset includes: D=0-8 F=5 K=5
 paradigm,series,D-Target,F-Target,K-Target,run,dp1_request_count,dp2_orchestration_ops,dp3_payload_bytes,overfetch_fields,underfetch_extra_calls,status
 REST,D,0,5,5,1,1,1,265,5,0,ok
 REST,D,0,5,5,2,1,1,265,5,0,ok
@@ -48,4 +48,10 @@ REST,D,7,5,5,2,19532,19532,25996026,488280,19531,ok
 GraphQL,D,7,5,5,1,1,19532,14023416,0,0,ok
 GraphQL,D,7,5,5,2,1,19532,14023416,0,0,ok
 gRPC,D,7,5,5,1,1,19532,18653083,488280,0,ok
-gRPC,D,7,5,5,2,1,19532,
+gRPC,D,7,5,5,2,1,19532,18653083,488280,0,ok
+REST,D,8,5,5,1,97657,97657,129980401,2441405,97656,ok
+REST,D,8,5,5,2,97657,97657,129980401,2441405,97656,ok
+GraphQL,D,8,5,5,1,1,97657,70117166,0,0,ok
+GraphQL,D,8,5,5,2,1,97657,70117166,0,0,ok
+gRPC,D,8,5,5,1,1,97657,93265608,2441405,0,ok
+gRPC,D,8,5,5,2,1,97657,93265608,2441405,0,ok

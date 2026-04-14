@@ -32,8 +32,8 @@ METRICS = [
     ("dp1_request_count",       "DP1 — Request count"),
     ("dp2_orchestration_ops",   "DP2 — Orchestration ops"),
     ("dp3_payload_bytes",       "DP3 — Payload bytes"),
-    ("overfetch_fields",        "DP5 — Overfetch fields"),
     ("underfetch_extra_calls",  "DP4 — Underfetch extra calls"),
+    ("overfetch_fields",        "DP5 — Overfetch fields"),
 ]
 
 SERIES_X = {
@@ -144,12 +144,33 @@ def plot_csv(path: str) -> str:
         fig.update_xaxes(title_text=x_col, row=1, col=col_idx, dtick=1)
         fig.update_yaxes(title_text="Värde", row=1, col=col_idx)
 
+    # y-axelnamn för alla subplots: yaxis, yaxis2, yaxis3, ...
+    yaxis_keys = ["yaxis"] + [f"yaxis{i}" for i in range(2, n_metrics + 1)]
+
     fig.update_layout(
         title=dict(text=title, font=dict(size=16), x=0.5),
         height=480,
         legend=dict(orientation="h", yanchor="bottom", y=1.08, xanchor="center", x=0.5),
         plot_bgcolor="#fafafa",
         paper_bgcolor="#ffffff",
+        updatemenus=[dict(
+            type="buttons",
+            direction="right",
+            x=1.0, y=1.18,
+            xanchor="right", yanchor="top",
+            buttons=[
+                dict(
+                    label="Linjär",
+                    method="relayout",
+                    args=[{f"{k}.type": "linear" for k in yaxis_keys}],
+                ),
+                dict(
+                    label="Logaritmisk",
+                    method="relayout",
+                    args=[{f"{k}.type": "log" for k in yaxis_keys}],
+                ),
+            ],
+        )],
     )
 
     basename = os.path.splitext(os.path.basename(path))[0]
