@@ -25,6 +25,7 @@ public class AdminController {
      * @param D    depth
      * @param F    fan-out
      * @param K    number of fields
+     * @param S    string length per field value (default 16)
      * @param seed random seed
      * @return confirmation message
      */
@@ -33,8 +34,9 @@ public class AdminController {
             @RequestParam int D,
             @RequestParam int F,
             @RequestParam int K,
+            @RequestParam(defaultValue = "16") int S,
             @RequestParam(defaultValue = "42") int seed) {
-        dataStore.reload(D, F, K, seed);
-        return ResponseEntity.ok("Reloaded: D=" + D + " F=" + F + " K=" + K + " seed=" + seed);
+        dataStore.reload(D, F, K, S, seed);
+        return ResponseEntity.ok("Reloaded: D=" + D + " F=" + F + " K=" + K + " S=" + S + " seed=" + seed);
     }
 }

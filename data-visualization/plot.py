@@ -1,8 +1,8 @@
 """
-Visualisering av RQ1-experiment.
+Visualisering av RQ1- och RQ2-experiment.
 
-Läser alla rq1_*.csv från runner/results/, genererar interaktiva Plotly HTML-filer
-per CSV samt en dashboard.html med alla serier sida vid sida.
+Läser rq1_*.csv och rq2_*.csv från runner/results/, genererar interaktiva
+Plotly HTML-filer per CSV samt en dashboard.html med alla serier sida vid sida.
 
 Kör från projektroten: python data-visualization/plot.py
 """
@@ -19,7 +19,8 @@ from plotly.subplots import make_subplots
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS_DIR  = os.path.join(PROJECT_ROOT, "results")
 PLOTS_DIR    = os.path.join(RESULTS_DIR, "plots")
-CSV_PATTERN  = os.path.join(RESULTS_DIR, "rq1_*.csv")
+RQ1_PATTERN  = os.path.join(RESULTS_DIR, "rq1_*.csv")
+RQ2_PATTERN  = os.path.join(RESULTS_DIR, "rq2_*.csv")
 
 PARADIGM_COLORS = {
     "REST":    "#64B5F6",   # ljusblå
@@ -180,6 +181,96 @@ def plot_csv(path: str) -> str:
     return out_path
 
 
+# ── RQ2 plot ─────────────────────────────────────────────────────────────────
+
+def plot_rq2(path: str) -> str:
+    """
+    Genererar RQ2-plot: DP3 vs S-Target, en linje per K-värde per paradigm.
+    Visar korsningspunkten där protobuf-kompakthet slår GraphQL field selection.
+    """
+    df = load_csv(path)
+    ok = df[df["status"] == "ok"].copy()
+
+    k_values = sorted(ok["K-Target"].unique())
+    d = int(ok["D-Target"].iloc[0])
+    f = int(ok["F-Target"].iloc[0])
+    title = f"RQ2 — Payload (DP3) vs String Length  (D={d}, F={f})"
+
+    fig = make_subplots(
+        rows=1, cols=len(k_values),
+        subplot_titles=[f"K={k}" for k in k_values],
+        horizontal_spacing=0.04,
+    )
+
+    for col_idx, k in enumerate(k_values, start=1):
+        sub_k = ok[ok["K-Target"] == k]
+        show_legend = col_idx == 1
+        for paradigm in PARADIGM_ORDER:
+            sub = (
+                sub_k[sub_k["paradigm"] == paradigm]
+                .groupby("S-Target")["dp3_payload_bytes"]
+                .mean()
+                .reset_index()
+                .sort_values("S-Target")
+            )
+            if sub.empty:
+                continue
+            fig.add_trace(
+                go.Scatter(
+                    x=sub["S-Target"],
+                    y=sub["dp3_payload_bytes"],
+                    mode="lines+markers",
+                    name=paradigm,
+                    legendgroup=paradigm,
+                    showlegend=show_legend,
+                    line=dict(color=PARADIGM_COLORS[paradigm], width=2),
+                    marker=dict(size=5),
+                    hovertemplate=(
+                        f"<b>{paradigm}</b><br>S=%{{x}}<br>"
+                        f"DP3=%{{y}}<extra></extra>"
+                    ),
+                ),
+                row=1, col=col_idx,
+            )
+        fig.update_xaxes(title_text="S-Target", row=1, col=col_idx)
+        fig.update_yaxes(title_text="Payload bytes", row=1, col=col_idx)
+
+    n_cols = len(k_values)
+    yaxis_keys = ["yaxis"] + [f"yaxis{i}" for i in range(2, n_cols + 1)]
+
+    fig.update_layout(
+        title=dict(text=title, font=dict(size=16), x=0.5),
+        height=480,
+        legend=dict(orientation="h", yanchor="bottom", y=1.08, xanchor="center", x=0.5),
+        plot_bgcolor="#fafafa",
+        paper_bgcolor="#ffffff",
+        updatemenus=[dict(
+            type="buttons",
+            direction="right",
+            x=1.0, y=1.18,
+            xanchor="right", yanchor="top",
+            buttons=[
+                dict(
+                    label="Linjär",
+                    method="relayout",
+                    args=[{f"{k}.type": "linear" for k in yaxis_keys}],
+                ),
+                dict(
+                    label="Logaritmisk",
+                    method="relayout",
+                    args=[{f"{k}.type": "log" for k in yaxis_keys}],
+                ),
+            ],
+        )],
+    )
+
+    basename = os.path.splitext(os.path.basename(path))[0]
+    out_path = os.path.join(PLOTS_DIR, f"{basename}.html")
+    fig.write_html(out_path, include_plotlyjs="cdn", full_html=True)
+    print(f"  Sparad: {out_path}")
+    return out_path
+
+
 # ── Dashboard ─────────────────────────────────────────────────────────────────
 
 def write_dashboard(html_files: list[str]):
@@ -193,7 +284,7 @@ def write_dashboard(html_files: list[str]):
 <html lang="sv">
 <head>
   <meta charset="UTF-8" />
-  <title>RQ1 Dashboard</title>
+  <title>RQ1 &amp; RQ2 Dashboard</title>
   <style>
     * {{ box-sizing: border-box; margin: 0; padding: 0; }}
     body {{
@@ -222,7 +313,7 @@ def write_dashboard(html_files: list[str]):
   </style>
 </head>
 <body>
-  <h1>RQ1 — Structural Scalability Trade-offs: REST vs GraphQL vs gRPC</h1>
+  <h1>Structural Scalability Trade-offs: REST vs GraphQL vs gRPC</h1>
   <div class="grid">
 {iframes}
   </div>
@@ -240,14 +331,23 @@ def write_dashboard(html_files: list[str]):
 
 def main():
     os.makedirs(PLOTS_DIR, exist_ok=True)
-    csv_files = sorted(glob.glob(CSV_PATTERN))
 
-    if not csv_files:
-        print(f"Inga CSV-filer hittades: {CSV_PATTERN}")
+    rq1_files = sorted(glob.glob(RQ1_PATTERN))
+    rq2_files = sorted(glob.glob(RQ2_PATTERN))
+
+    if not rq1_files and not rq2_files:
+        print(f"Inga CSV-filer hittades i {RESULTS_DIR}")
         return
 
-    print(f"Hittade {len(csv_files)} CSV-fil(er):")
-    html_files = [plot_csv(path) for path in csv_files]
+    html_files = []
+
+    if rq1_files:
+        print(f"RQ1: {len(rq1_files)} fil(er)")
+        html_files += [plot_csv(path) for path in rq1_files]
+
+    if rq2_files:
+        print(f"RQ2: {len(rq2_files)} fil(er)")
+        html_files += [plot_rq2(path) for path in rq2_files]
 
     write_dashboard(html_files)
     print(f"\nKlart. Öppna: {os.path.join(PLOTS_DIR, 'dashboard.html')}")

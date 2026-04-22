@@ -22,7 +22,7 @@ public class DataStore {
     // TODO: RM before experiment. DEV ONLY
     @PostConstruct
     public void init() {
-        reload(3, 2, 2, 42);
+        reload(2, 2, 2, 42);
          
     }
 
@@ -36,8 +36,21 @@ public class DataStore {
      * @param seed random seed — use 42 for reproducible experiment runs
      */
     public void reload(int d, int f, int k, int seed) {
+        reload(d, f, k, 16, seed);
+    }
+
+    /**
+     * Regenerates the dataset with a custom string length per field value.
+     *
+     * @param d    nesting depth
+     * @param f    fan-out (children per node)
+     * @param k    field count per node
+     * @param s    string length for each field value
+     * @param seed random seed — use 42 for reproducible experiment runs
+     */
+    public void reload(int d, int f, int k, int s, int seed) {
         index = new HashMap<>();
-        Datagenerator datagenerator = new Datagenerator(d, f, k, seed);
+        Datagenerator datagenerator = new Datagenerator(d, f, k, s, seed);
         root = datagenerator.generate();
         // TODO: RM later
         datagenerator.printStats();

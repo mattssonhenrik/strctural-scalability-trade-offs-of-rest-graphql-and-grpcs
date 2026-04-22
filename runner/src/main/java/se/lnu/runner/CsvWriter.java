@@ -16,7 +16,7 @@ import java.io.PrintWriter;
  */
 public class CsvWriter {
 
-    private static String HEADER = "paradigm,series,D-Target,F-Target,K-Target,run,dp1_request_count,dp2_orchestration_ops,dp3_payload_bytes,overfetch_fields,underfetch_extra_calls,status";
+    private static String HEADER = "paradigm,series,D-Target,F-Target,K-Target,S-Target,run,dp1_request_count,dp2_orchestration_ops,dp3_payload_bytes,overfetch_fields,underfetch_extra_calls,status";
 
     private PrintWriter writer;
 
@@ -34,12 +34,13 @@ public class CsvWriter {
     /** Appends one result row to the CSV. */
     public void appendRow(RunResult result) {
         TestCase testCase = result.getTestCase();
-        writer.printf("%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s%n",
+        writer.printf("%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s%n",
                 testCase.getParadigm(),
                 testCase.getSeries(),
                 testCase.getD(),
                 testCase.getF(),
                 testCase.getK(),
+                testCase.getS(),
                 testCase.getRun(),
                 result.getDp1(),
                 result.getDp2(),

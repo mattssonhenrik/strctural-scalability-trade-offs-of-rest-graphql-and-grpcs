@@ -3,9 +3,9 @@ package se.lnu.model;
 /**
  * Stores the independent variables for one experiment run.
  *
- * series = swept variable (D, F, or K)
+ * series = swept variable (D, F, K, or S)
  * paradigm = API under test (REST, GraphQL or gRPC)
- * d, f, k = test-case values
+ * d, f, k, s = test-case values
  * run = repetition number
  */
 public class TestCase {
@@ -15,14 +15,16 @@ public class TestCase {
     private int d;
     private int f;
     private int k;
+    private int s;
     private int run;
 
-    public TestCase(String series, String paradigm, int d, int f, int k, int run) {
+    public TestCase(String series, String paradigm, int d, int f, int k, int s, int run) {
         this.series = series;
         this.paradigm = paradigm;
         this.d = d;
         this.f = f;
         this.k = k;
+        this.s = s;
         this.run = run;
     }
 
@@ -44,6 +46,10 @@ public class TestCase {
 
     public int getK() {
         return k;
+    }
+
+    public int getS() {
+        return s;
     }
 
     public int getRun() {

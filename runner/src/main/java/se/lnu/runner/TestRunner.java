@@ -37,11 +37,16 @@ public class TestRunner {
     private final HttpClient http = HttpClient.newHttpClient();
     private final ObjectMapper mapper = new ObjectMapper();
 
-    /** Runs all three OVAT series (D, F, K) and writes results to CSV! */
-    public void run() throws IOException {
-        runSeries("D", TestConfig.D_BASELINE, TestConfig.F_BASELINE, TestConfig.K_BASELINE);
-        runSeries("F", TestConfig.D_BASELINE, TestConfig.F_BASELINE, TestConfig.K_BASELINE);
-        runSeries("K", TestConfig.D_BASELINE, TestConfig.F_BASELINE, TestConfig.K_BASELINE);
+    /** RQ1: runs the three OVAT series (D, F, K) and writes results to CSV. */
+    public void runRQ1() throws IOException {
+        runSeries("D", TestConfig.D_BASELINE, TestConfig.F_BASELINE, TestConfig.K_BASELINE, TestConfig.S_BASELINE);
+        runSeries("F", TestConfig.D_BASELINE, TestConfig.F_BASELINE, TestConfig.K_BASELINE, TestConfig.S_BASELINE);
+        runSeries("K", TestConfig.D_BASELINE, TestConfig.F_BASELINE, TestConfig.K_BASELINE, TestConfig.S_BASELINE);
+    }
+
+    /** RQ2: sweeps S (string length) with K as inner loop to find the protobuf/GraphQL crossover point. */
+    public void runRQ2() throws IOException {
+        runSeriesS(TestConfig.D_BASELINE, TestConfig.F_BASELINE, TestConfig.K_MAX);
     }
 
     // ── private ───────────────────────────────────────────────────────────────
@@ -50,7 +55,7 @@ public class TestRunner {
      * Sweeps one variable (D, F, or K) from SWEEP_MIN to SWEEP_MAX, writes one CSV
      * file.
      */
-    private void runSeries(String series, int dBase, int fBase, int kBase) throws IOException {
+    private void runSeries(String series, int dBase, int fBase, int kBase, int sBase) throws IOException {
         CsvWriter csv = new CsvWriter("../results/rq1_" + series + "_series_" + buildTag(series) + ".csv", series);
 
         for (int value = TestConfig.SWEEP_MIN; value <= TestConfig.SWEEP_MAX; value++) {
@@ -64,15 +69,46 @@ public class TestRunner {
             if (k == 0) continue;
 
             // Dataset always generated with K_MAX fields — target k varies per test case
-            reload(d, f, TestConfig.K_MAX);
+            reload(d, f, TestConfig.K_MAX, sBase);
 
             for (String paradigm : TestConfig.PARADIGMS) {
                 for (int run = 1; run <= TestConfig.N_RUNS; run++) {
-                    TestCase testcase = new TestCase(series, paradigm, d, f, k, run);
+                    TestCase testcase = new TestCase(series, paradigm, d, f, k, sBase, run);
                     RunResult result = runSingle(paradigm, testcase);
                     csv.appendRow(result);
-                    System.out.printf("%-8s %-7s D=%2d F=%2d K=%2d run=%d → %s%n",
-                            paradigm, series, d, f, k, run, result.getStatus());
+                    System.out.printf("%-8s %-7s D=%2d F=%2d K=%2d S=%3d run=%d → %s%n",
+                            paradigm, series, d, f, k, sBase, run, result.getStatus());
+                }
+            }
+        }
+
+        csv.close();
+    }
+
+    /**
+     * RQ2: sweeps S (string length) from S_SWEEP_MIN to S_SWEEP_MAX.
+     * D, F, K are fixed at baselines. K_target sweeps 1..K_MAX per S value
+     * to expose the crossover point where protobuf compactness beats GraphQL
+     * field selection.
+     */
+    private void runSeriesS(int dBase, int fBase, int kMax) throws IOException {
+        int sMin = TestConfig.S_SWEEP_VALUES[0];
+        int sMax = TestConfig.S_SWEEP_VALUES[TestConfig.S_SWEEP_VALUES.length - 1];
+        String tag = "D" + dBase + "_F" + fBase + "_K" + kMax + "_S" + sMin + "-" + sMax;
+        CsvWriter csv = new CsvWriter("../results/rq2_S_series_" + tag + ".csv", "S");
+
+        for (int s : TestConfig.S_SWEEP_VALUES) {
+            reload(dBase, fBase, kMax, s);
+
+            for (int k = 1; k <= kMax; k++) {
+                for (String paradigm : TestConfig.PARADIGMS) {
+                    for (int run = 1; run <= TestConfig.N_RUNS; run++) {
+                        TestCase testcase = new TestCase("S", paradigm, dBase, fBase, k, s, run);
+                        RunResult result = runSingle(paradigm, testcase);
+                        csv.appendRow(result);
+                        System.out.printf("%-8s S-series D=%2d F=%2d K=%2d S=%3d run=%d → %s%n",
+                                paradigm, dBase, fBase, k, s, run, result.getStatus());
+                    }
                 }
             }
         }
@@ -127,16 +163,18 @@ public class TestRunner {
 
                 if (childResp.statusCode() != 200) return error(testcase, dp1, dp2, dp3, dp5, dp4);
 
+                RunnerNode[] children = mapper.readValue(childResp.body(), RunnerNode[].class);
+                if (children.length != testcase.getF()) return error(testcase, dp1, dp2, dp3, dp5, dp4);
+
                 if (nodeDepth + 1 < testcase.getD()) {
-                    RunnerNode[] children = mapper.readValue(childResp.body(), RunnerNode[].class);
                     for (RunnerNode child : children) {
                         queue.add(new String[]{ child.getId(), String.valueOf(nodeDepth + 1) });
                     }
                 }
             }
 
-            dp5 = MetricsAccumulator.overfetchRest(TestConfig.K_MAX, testcase.getK(), testcase.getD(), testcase.getF());
-            dp4 = MetricsAccumulator.underfetchRest(dp1);
+            dp5 = MetricsAccumulator.overfetch(TestConfig.K_MAX, testcase.getK(), testcase.getD(), testcase.getF());
+            dp4 = MetricsAccumulator.underfetch(dp1);
 
             return new RunResult(testcase, dp1, dp2, dp3, dp5, dp4, "ok");
 
@@ -161,12 +199,15 @@ public class TestRunner {
             dp1++;
             dp2 += MetricsAccumulator.orchestrationCount(resp);
             dp3 += MetricsAccumulator.contentLength(resp);
-            dp4 = dp1 - 1;
+            dp4 = MetricsAccumulator.underfetch(dp1);
 
             if (resp.statusCode() != 200) return error(tescase, dp1, dp2, dp3, dp5, dp4);
 
             dp5 = MetricsAccumulator.overfetchGraphQL(resp.body(), tescase.getK());
             if (dp5 != 0) return new RunResult(tescase, dp1, dp2, dp3, dp5, dp4, "error");
+
+            if (!MetricsAccumulator.verifyTreeShape(resp.body(), tescase.getD(), tescase.getF()))
+                return error(tescase, dp1, dp2, dp3, dp5, dp4);
 
             return new RunResult(tescase, dp1, dp2, dp3, dp5, dp4, "ok");
 
@@ -182,13 +223,22 @@ public class TestRunner {
      * gRPC fetches full tree in one call → underfetch = 0.
      */
     private RunResult runGrpc(TestCase tc) {
+        int dp1 = 0;
+        int dp2 = 0;
+        int dp3 = 0;
+        int dp4 = 0;
+        int dp5 = 0;
+
         try {
             GrpcClient.GrpcResult result = grpcClient.fetch(tc.getD());
-            int dp1 = 1;
-            int dp2 = result.dp2();
-            int dp3 = result.dp3();
-            int dp5 = MetricsAccumulator.overfetchRest(TestConfig.K_MAX, tc.getK(), tc.getD(), tc.getF());
-            int dp4 = 0;
+            dp1++;
+            dp2 = MetricsAccumulator.orchestrationCount(result);
+            dp3 = MetricsAccumulator.contentLength(result);
+            if (!MetricsAccumulator.verifyTreeShape(result.response(), tc.getD(), tc.getF()))
+                return error(tc, dp1, dp2, dp3, dp5, dp4);
+
+            dp5 = MetricsAccumulator.overfetch(TestConfig.K_MAX, tc.getK(), tc.getD(), tc.getF());
+            dp4 = MetricsAccumulator.underfetch(dp1);
             return new RunResult(tc, dp1, dp2, dp3, dp5, dp4, "ok");
         } catch (Exception e) {
             return new RunResult(tc, 1, 0, 0, 0, 0, "error");
@@ -211,8 +261,12 @@ public class TestRunner {
      * Calls POST /api/admin/reload to regenerate the dataset before each test case.
      */
     private void reload(int d, int f, int k) {
-        String url = String.format("%s/api/admin/reload?D=%d&F=%d&K=%d&seed=%d",
-                TestConfig.BASE_URL, d, f, k, TestConfig.SEED);
+        reload(d, f, k, TestConfig.S_BASELINE);
+    }
+
+    private void reload(int d, int f, int k, int s) {
+        String url = String.format("%s/api/admin/reload?D=%d&F=%d&K=%d&S=%d&seed=%d",
+                TestConfig.BASE_URL, d, f, k, s, TestConfig.SEED);
         try {
             HttpRequest req = HttpRequest.newBuilder()
                     .uri(URI.create(url))

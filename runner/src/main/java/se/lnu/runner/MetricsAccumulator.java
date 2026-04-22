@@ -1,11 +1,15 @@
 package se.lnu.runner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import se.lnu.apis.grpc.Node;
+import se.lnu.apis.grpc.TreeResponse;
+import se.lnu.clients.GrpcClient;
 
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+
 
 /**
  * Single source of truth for all DP1–DP5 measurement logic.
@@ -19,9 +23,9 @@ public class MetricsAccumulator {
 
     // ── Shared ────────────────────────────────────────────────────────────────
 
-    /** DP3: Content-Length header, falls back to body byte count. */
+    /** DP3: UTF-8 byte count of response body. */
     public static int contentLength(HttpResponse<String> resp) {
-        return resp.body().length();
+        return resp.body().getBytes(StandardCharsets.UTF_8).length;
     }
 
     /** DP2: X-Orchestration-Count header, error if absent. */
@@ -34,15 +38,27 @@ public class MetricsAccumulator {
 
     
 
+    // ── gRPC ─────────────────────────────────────────────────────────────────
+
+    /** DP2: x-orchestration-count trailing metadata. */
+    public static int orchestrationCount(GrpcClient.GrpcResult result) {
+        return result.dp2();
+    }
+
+    /** DP3: serialized protobuf message bytes. */
+    public static int contentLength(GrpcClient.GrpcResult result) {
+        return result.dp3();
+    }
+
     // ── REST ──────────────────────────────────────────────────────────────────
 
     /** DP5 for REST: REST always returns all kMax fields, overfetch = surplus × nodes. */
-    public static int overfetchRest(int kMax, int k, int d, int f) {
+    public static int overfetch(int kMax, int k, int d, int f) {
         return (kMax - k) * totalNodes(d, f);
     }
 
-    /** DP4 for REST: every request beyond the first root call is an extra call. */
-    public static int underfetchRest(int dp1) {
+    /** DP4: extra calls beyond the first — 0 for paradigms that resolve in one call. */
+    public static int underfetch(int dp1) {
         return dp1 - 1;
     }
 
@@ -58,6 +74,19 @@ public class MetricsAccumulator {
         Map<String, Object> root = (Map<String, Object>)
                 ((Map<String, Object>) mapper.readValue(body, Map.class).get("data")).get("root");
         return countOverfetchNode(root, expectedK);
+    }
+
+    /** Verifies that the GraphQL response tree matches expected depth D and fan-out F. */
+    @SuppressWarnings("unchecked")
+    public static boolean verifyTreeShape(String body, int expectedD, int expectedF) throws Exception {
+        Map<String, Object> root = (Map<String, Object>)
+                ((Map<String, Object>) mapper.readValue(body, Map.class).get("data")).get("root");
+        return verifyJsonNode(root, expectedD, expectedF, 0);
+    }
+
+    /** Verifies that the gRPC response tree matches expected depth D and fan-out F. */
+    public static boolean verifyTreeShape(TreeResponse response, int expectedD, int expectedF) {
+        return verifyGrpcNode(response.getRoot(), expectedD, expectedF, 0);
     }
 
     // ── Private ───────────────────────────────────────────────────────────────
@@ -78,8 +107,32 @@ public class MetricsAccumulator {
         return overfetch;
     }
 
+    @SuppressWarnings("unchecked")
+    private static boolean verifyJsonNode(Map<String, Object> node, int expectedD, int expectedF, int depth) {
+        List<Map<String, Object>> children = (List<Map<String, Object>>) node.get("children");
+        if (depth == expectedD) {
+            return children == null || children.isEmpty();
+        }
+        if (children == null || children.size() != expectedF) return false;
+        for (Map<String, Object> child : children) {
+            if (!verifyJsonNode(child, expectedD, expectedF, depth + 1)) return false;
+        }
+        return true;
+    }
+
+    private static boolean verifyGrpcNode(Node node, int expectedD, int expectedF, int depth) {
+        if (depth == expectedD) {
+            return node.getChildrenCount() == 0;
+        }
+        if (node.getChildrenCount() != expectedF) return false;
+        for (Node child : node.getChildrenList()) {
+            if (!verifyGrpcNode(child, expectedD, expectedF, depth + 1)) return false;
+        }
+        return true;
+    }
+
     /** Total node count for a complete F-ary tree of depth D. */
-    private static int totalNodes(int d, int f) {
+    public static int totalNodes(int d, int f) {
         if (f == 1) return d + 1;
         return (int) ((Math.pow(f, d + 1) - 1) / (f - 1));
     }

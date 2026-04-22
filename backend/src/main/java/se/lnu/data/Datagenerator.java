@@ -36,25 +36,32 @@ import java.util.*;
  */
 public class Datagenerator {
 
-    private static final int STRING_LENGTH = 16;
     private static final String ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
     private int depth;
     private int fanOut;
     private int fieldCount;
+    private int stringLength;
     private Random random;
 
     public Datagenerator(int depth, int fanOut, int fieldCount, int seed) {
+        this(depth, fanOut, fieldCount, 16, seed);
+    }
+
+    public Datagenerator(int depth, int fanOut, int fieldCount, int stringLength, int seed) {
         if (depth < 0)
             throw new IllegalArgumentException("depth must be >= 0");
         if (fanOut < 1)
             throw new IllegalArgumentException("fanOut must be >= 1");
         if (fieldCount < 1)
             throw new IllegalArgumentException("fieldCount must be >= 1");
+        if (stringLength < 1)
+            throw new IllegalArgumentException("stringLength must be >= 1");
 
         this.depth = depth;
         this.fanOut = fanOut;
         this.fieldCount = fieldCount;
+        this.stringLength = stringLength;
         this.random = new Random(seed);
     }
 
@@ -95,7 +102,7 @@ public class Datagenerator {
 
         Map<String, String> fields = new LinkedHashMap<>();
         for (int k = 0; k < fieldCount; k++) {
-            fields.put(String.format("k%02d", k), randomString(STRING_LENGTH));
+            fields.put(String.format("k%02d", k), randomString(stringLength));
         }
 
         List<Node> children = new ArrayList<>();
