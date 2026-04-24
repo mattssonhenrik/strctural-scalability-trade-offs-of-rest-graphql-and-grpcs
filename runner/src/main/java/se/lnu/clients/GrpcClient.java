@@ -13,11 +13,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * gRPC client — fetches the full tree in one RPC call.
- * Returns the raw TreeResponse and trailing metadata for DP2 and DP3 measurement.
+ * Returns the raw TreeResponse and trailing metadata for CM2 and CM3 measurement.
  */
 public class GrpcClient {
 
-    static final Metadata.Key<String> DP2_KEY =
+    static final Metadata.Key<String> CM2_KEY =
             Metadata.Key.of("x-orchestration-count", Metadata.ASCII_STRING_MARSHALLER);
 
     private final ManagedChannel channel;
@@ -40,21 +40,21 @@ public class GrpcClient {
         TreeResponse response = interceptedStub.getTree(
                 TreeRequest.newBuilder().setRootId("root").setTargetDepth(targetDepth).build());
 
-        int dp2 = 0;
+        int cm2 = 0;
         Metadata trailing = trailingMetadata.get();
         if (trailing != null) {
-            String val = trailing.get(DP2_KEY);
-            if (val != null) dp2 = Integer.parseInt(val);
+            String val = trailing.get(CM2_KEY);
+            if (val != null) cm2 = Integer.parseInt(val);
         }
 
-        int dp3 = response.toByteArray().length;
-        return new GrpcResult(response, dp2, dp3);
+        int cm3 = response.toByteArray().length;
+        return new GrpcResult(response, cm2, cm3);
     }
 
     public void shutdown() {
         channel.shutdown();
     }
 
-    /** Carries the response + pre-extracted DP2 and DP3 back to TestRunner. */
-    public record GrpcResult(TreeResponse response, int dp2, int dp3) {}
+    /** Carries the response + pre-extracted CM2 and CM3 back to TestRunner. */
+    public record GrpcResult(TreeResponse response, int cm2, int cm3) {}
 }

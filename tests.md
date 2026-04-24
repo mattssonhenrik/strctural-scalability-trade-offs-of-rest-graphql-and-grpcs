@@ -22,3 +22,17 @@ Each test case sweeps one variable (OVAT). Amount of runs = Test/API × 3 paradi
 | RQ1-D30-F30-K0-100    | 30     | 30     | 0–100  | 160        | 480            | No    |
 | RQ1-D50-F50-K0-100    | 50     | 50     | 0–100  | 170        | 510            | No    |
 | RQ1-D70-F70-K0-100    | 70     | 70     | 0–100  | 180        | 540            | No    |
+
+
+
+# RQ1 — D, F, K-serier
+./gradlew :runner:run --args="RQ1"
+
+# RQ2 — S-serie (protobuf vs GraphQL crossover)
+./gradlew :runner:run --args="RQ2"
+
+# Utan argument körs RQ1 som default:
+./gradlew :runner:run   # → kör RQ1
+
+# plot data från csv filer
+python data-visualization/plot.py             

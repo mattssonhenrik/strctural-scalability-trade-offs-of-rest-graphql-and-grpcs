@@ -7,12 +7,12 @@ import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 
 /**
- * gRPC ServerInterceptor that resets DP2 counter before each call
+ * gRPC ServerInterceptor that resets CM2 counter before each call
  * and writes the final count as trailing metadata after the response.
  */
 public class OrchestrationGrpcInterceptor implements ServerInterceptor {
 
-    static final Metadata.Key<String> DP2_KEY =
+    static final Metadata.Key<String> CM2_KEY =
             Metadata.Key.of("x-orchestration-count", Metadata.ASCII_STRING_MARSHALLER);
 
     @Override
@@ -25,14 +25,14 @@ public class OrchestrationGrpcInterceptor implements ServerInterceptor {
             @Override
             public void sendMessage(Resp message) {
                 Metadata trailers = new Metadata();
-                trailers.put(DP2_KEY, String.valueOf(OrchestrationCounter.get()));
+                trailers.put(CM2_KEY, String.valueOf(OrchestrationCounter.get()));
                 super.sendMessage(message);
                 // trailers sent in close()
             }
 
             @Override
             public void close(io.grpc.Status status, Metadata trailers) {
-                trailers.put(DP2_KEY, String.valueOf(OrchestrationCounter.get()));
+                trailers.put(CM2_KEY, String.valueOf(OrchestrationCounter.get()));
                 super.close(status, trailers);
             }
         };

@@ -3,9 +3,9 @@ package se.lnu.model;
 /**
  * Stores the measured results for one experiment run.
  *
- * DP1 = client-to-server requests
- * DP2 = server-side orchestration operations
- * DP3 = total response body bytes
+ * CM1 = client-to-server requests
+ * CM2 = server-side orchestration operations
+ * CM3 = total response body bytes
  * overfetchFields = fields returned beyond target K
  * underfetchExtraCalls = extra requests beyond the first
  * status = ok, capped, or error
@@ -13,19 +13,19 @@ package se.lnu.model;
 public class RunResult {
 
     private TestCase testCase;
-    private int dp1;
-    private int dp2;
-    private int dp3;
+    private int cm1;
+    private int cm2;
+    private int cm3;
     private int overfetchFields;
     private int underfetchExtraCalls;
     private String status;
 
-    public RunResult(TestCase testCase, int dp1, int dp2, int dp3,
+    public RunResult(TestCase testCase, int cm1, int cm2, int cm3,
             int overfetchFields, int underfetchExtraCalls, String status) {
         this.testCase = testCase;
-        this.dp1 = dp1;
-        this.dp2 = dp2;
-        this.dp3 = dp3;
+        this.cm1 = cm1;
+        this.cm2 = cm2;
+        this.cm3 = cm3;
         this.overfetchFields = overfetchFields;
         this.underfetchExtraCalls = underfetchExtraCalls;
         this.status = status;
@@ -35,16 +35,16 @@ public class RunResult {
         return testCase;
     }
 
-    public int getDp1() {
-        return dp1;
+    public int getCm1() {
+        return cm1;
     }
 
-    public int getDp2() {
-        return dp2;
+    public int getCm2() {
+        return cm2;
     }
 
-    public int getDp3() {
-        return dp3;
+    public int getCm3() {
+        return cm3;
     }
 
     public int getOverfetchFields() {

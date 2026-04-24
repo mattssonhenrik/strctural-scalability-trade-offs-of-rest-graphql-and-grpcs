@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 /**
- * Resets the DP2 counter before GraphQL execution and writes the final count
+ * Resets the CM2 counter before GraphQL execution and writes the final count
  * as a response header after all resolvers have completed.
  *
  * ResponseBodyAdvice does not fire for Spring for GraphQL responses — it uses

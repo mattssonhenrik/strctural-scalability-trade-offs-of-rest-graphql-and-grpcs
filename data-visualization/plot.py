@@ -30,11 +30,11 @@ PARADIGM_COLORS = {
 PARADIGM_ORDER = ["REST", "GraphQL", "gRPC"]
 
 METRICS = [
-    ("dp1_request_count",       "DP1 — Request count"),
-    ("dp2_orchestration_ops",   "DP2 — Orchestration ops"),
-    ("dp3_payload_bytes",       "DP3 — Payload bytes"),
-    ("underfetch_extra_calls",  "DP4 — Underfetch extra calls"),
-    ("overfetch_fields",        "DP5 — Overfetch fields"),
+    ("cm1_request_count",       "CM1 — Request count"),
+    ("cm2_orchestration_ops",   "CM2 — Orchestration ops"),
+    ("cm3_payload_bytes",       "CM3 — Payload bytes"),
+    ("underfetch_extra_calls",  "CM4 — Underfetch extra calls"),
+    ("overfetch_fields",        "CM5 — Overfetch fields"),
 ]
 
 SERIES_X = {
@@ -185,7 +185,7 @@ def plot_csv(path: str) -> str:
 
 def plot_rq2(path: str) -> str:
     """
-    Genererar RQ2-plot: DP3 vs S-Target, en linje per K-värde per paradigm.
+    Genererar RQ2-plot: CM3 vs S-Target, en linje per K-värde per paradigm.
     Visar korsningspunkten där protobuf-kompakthet slår GraphQL field selection.
     """
     df = load_csv(path)
@@ -194,7 +194,7 @@ def plot_rq2(path: str) -> str:
     k_values = sorted(ok["K-Target"].unique())
     d = int(ok["D-Target"].iloc[0])
     f = int(ok["F-Target"].iloc[0])
-    title = f"RQ2 — Payload (DP3) vs String Length  (D={d}, F={f})"
+    title = f"RQ2 — Payload (CM3) vs String Length  (D={d}, F={f})"
 
     fig = make_subplots(
         rows=1, cols=len(k_values),
@@ -208,7 +208,7 @@ def plot_rq2(path: str) -> str:
         for paradigm in PARADIGM_ORDER:
             sub = (
                 sub_k[sub_k["paradigm"] == paradigm]
-                .groupby("S-Target")["dp3_payload_bytes"]
+                .groupby("S-Target")["cm3_payload_bytes"]
                 .mean()
                 .reset_index()
                 .sort_values("S-Target")
@@ -218,7 +218,7 @@ def plot_rq2(path: str) -> str:
             fig.add_trace(
                 go.Scatter(
                     x=sub["S-Target"],
-                    y=sub["dp3_payload_bytes"],
+                    y=sub["cm3_payload_bytes"],
                     mode="lines+markers",
                     name=paradigm,
                     legendgroup=paradigm,
@@ -227,7 +227,7 @@ def plot_rq2(path: str) -> str:
                     marker=dict(size=5),
                     hovertemplate=(
                         f"<b>{paradigm}</b><br>S=%{{x}}<br>"
-                        f"DP3=%{{y}}<extra></extra>"
+                        f"CM3=%{{y}}<extra></extra>"
                     ),
                 ),
                 row=1, col=col_idx,

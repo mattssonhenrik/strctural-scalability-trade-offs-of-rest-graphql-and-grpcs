@@ -12,7 +12,7 @@ import java.util.Map;
 
 
 /**
- * Single source of truth for all DP1–DP5 measurement logic.
+ * Single source of truth for all CM1–CM5 measurement logic.
  *
  * Shared methods are paradigm-agnostic.
  * Paradigm-specific methods are grouped by API type.
@@ -23,12 +23,12 @@ public class MetricsAccumulator {
 
     // ── Shared ────────────────────────────────────────────────────────────────
 
-    /** DP3: UTF-8 byte count of response body. */
+    /** CM3: UTF-8 byte count of response body. */
     public static int contentLength(HttpResponse<String> resp) {
         return resp.body().getBytes(StandardCharsets.UTF_8).length;
     }
 
-    /** DP2: X-Orchestration-Count header, error if absent. */
+    /** CM2: X-Orchestration-Count header, error if absent. */
     public static int orchestrationCount(HttpResponse<String> resp) {
         return resp.headers().firstValue("X-Orchestration-Count")
                 .map(Integer::parseInt)
@@ -40,32 +40,32 @@ public class MetricsAccumulator {
 
     // ── gRPC ─────────────────────────────────────────────────────────────────
 
-    /** DP2: x-orchestration-count trailing metadata. */
+    /** CM2: x-orchestration-count trailing metadata. */
     public static int orchestrationCount(GrpcClient.GrpcResult result) {
-        return result.dp2();
+        return result.cm2();
     }
 
-    /** DP3: serialized protobuf message bytes. */
+    /** CM3: serialized protobuf message bytes. */
     public static int contentLength(GrpcClient.GrpcResult result) {
-        return result.dp3();
+        return result.cm3();
     }
 
     // ── REST ──────────────────────────────────────────────────────────────────
 
-    /** DP5 for REST: REST always returns all kMax fields, overfetch = surplus × nodes. */
+    /** CM5 for REST: REST always returns all kMax fields, overfetch = surplus × nodes. */
     public static int overfetch(int kMax, int k, int d, int f) {
         return (kMax - k) * totalNodes(d, f);
     }
 
-    /** DP4: extra calls beyond the first — 0 for paradigms that resolve in one call. */
-    public static int underfetch(int dp1) {
-        return dp1 - 1;
+    /** CM4: extra calls beyond the first — 0 for paradigms that resolve in one call. */
+    public static int underfetch(int cm1) {
+        return cm1 - 1;
     }
 
     // ── GraphQL ───────────────────────────────────────────────────────────────
 
     /**
-     * DP5 for GraphQL: parses the response body and counts actual k-fields per node.
+     * CM5 for GraphQL: parses the response body and counts actual k-fields per node.
      * Returns total surplus fields across all nodes.
      * Should be 0 if the query was built correctly — non-zero indicates a bug.
      */

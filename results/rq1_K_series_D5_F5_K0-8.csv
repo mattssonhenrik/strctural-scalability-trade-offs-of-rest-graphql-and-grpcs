@@ -1,6 +1,6 @@
 # RQ1 experiment - K-series
 Dataset includes: D=5 F=5 K=0-8
-paradigm,series,D-Target,F-Target,K-Target,run,dp1_request_count,dp2_orchestration_ops,dp3_payload_bytes,overfetch_fields,underfetch_extra_calls,status
+paradigm,series,D-Target,F-Target,K-Target,run,cm1_request_count,cm2_orchestration_ops,cm3_payload_bytes,overfetch_fields,underfetch_extra_calls,status
 REST,K,5,5,1,1,782,782,1039776,35154,781,ok
 REST,K,5,5,1,2,782,782,1039776,35154,781,ok
 GraphQL,K,5,5,1,1,1,782,170316,0,0,ok

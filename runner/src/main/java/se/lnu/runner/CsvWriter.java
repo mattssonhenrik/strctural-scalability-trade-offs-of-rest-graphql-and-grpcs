@@ -16,7 +16,7 @@ import java.io.PrintWriter;
  */
 public class CsvWriter {
 
-    private static String HEADER = "paradigm,series,D-Target,F-Target,K-Target,S-Target,run,dp1_request_count,dp2_orchestration_ops,dp3_payload_bytes,overfetch_fields,underfetch_extra_calls,status";
+    private static String HEADER = "paradigm,series,D-Target,F-Target,K-Target,S-Target,run,cm1_request_count,cm2_orchestration_ops,cm3_payload_bytes,overfetch_fields,underfetch_extra_calls,status";
 
     private PrintWriter writer;
 
@@ -42,9 +42,9 @@ public class CsvWriter {
                 testCase.getK(),
                 testCase.getS(),
                 testCase.getRun(),
-                result.getDp1(),
-                result.getDp2(),
-                result.getDp3(),
+                result.getCm1(),
+                result.getCm2(),
+                result.getCm3(),
                 result.getOverfetchFields(),
                 result.getUnderfetchExtraCalls(),
                 result.getStatus());

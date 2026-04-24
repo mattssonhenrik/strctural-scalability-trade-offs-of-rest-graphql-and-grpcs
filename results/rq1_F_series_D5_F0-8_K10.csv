@@ -1,6 +1,6 @@
 # RQ1 experiment - F-series
 Dataset includes: D=5 F=0-8 K=5
-paradigm,series,D-Target,F-Target,K-Target,run,dp1_request_count,dp2_orchestration_ops,dp3_payload_bytes,overfetch_fields,underfetch_extra_calls,status
+paradigm,series,D-Target,F-Target,K-Target,run,cm1_request_count,cm2_orchestration_ops,cm3_payload_bytes,overfetch_fields,underfetch_extra_calls,status
 REST,F,5,1,5,1,6,6,1600,30,5,ok
 REST,F,5,1,5,2,6,6,1600,30,5,ok
 GraphQL,F,5,1,5,1,1,6,928,0,0,ok

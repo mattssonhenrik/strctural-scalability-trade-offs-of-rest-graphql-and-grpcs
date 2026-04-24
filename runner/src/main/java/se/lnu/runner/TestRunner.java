@@ -130,23 +130,23 @@ public class TestRunner {
      * and assembles the RunResult.
      */
     private RunResult runRest(TestCase testcase) {
-        int dp1 = 0;
-        int dp2 = 0;
-        int dp3 = 0;
-        int dp5 = 0;
-        int dp4 = 0;
+        int cm1 = 0;
+        int cm2 = 0;
+        int cm3 = 0;
+        int cm5 = 0;
+        int cm4 = 0;
 
         // queue entries: [nodeId, currentDepth]
         Deque<String[]> queue = new ArrayDeque<>();
 
         try {
             HttpResponse<String> rootResp = restClient.fetchRoot();
-            dp1++;
-            dp2 += MetricsAccumulator.orchestrationCount(rootResp);
-            dp3 += MetricsAccumulator.contentLength(rootResp);
+            cm1++;
+            cm2 += MetricsAccumulator.orchestrationCount(rootResp);
+            cm3 += MetricsAccumulator.contentLength(rootResp);
             
 
-            if (rootResp.statusCode() != 200) return error(testcase, dp1, dp2, dp3, dp5, dp4);
+            if (rootResp.statusCode() != 200) return error(testcase, cm1, cm2, cm3, cm5, cm4);
 
             RunnerNode root = mapper.readValue(rootResp.body(), RunnerNode.class);
             if (testcase.getD() > 0) queue.add(new String[]{ root.getId(), "0" });
@@ -157,14 +157,14 @@ public class TestRunner {
                 int nodeDepth   = Integer.parseInt(entry[1]);
 
                 HttpResponse<String> childResp = restClient.fetchChildren(nodeId);
-                dp1++;
-                dp2 += MetricsAccumulator.orchestrationCount(childResp);
-                dp3 += MetricsAccumulator.contentLength(childResp);
+                cm1++;
+                cm2 += MetricsAccumulator.orchestrationCount(childResp);
+                cm3 += MetricsAccumulator.contentLength(childResp);
 
-                if (childResp.statusCode() != 200) return error(testcase, dp1, dp2, dp3, dp5, dp4);
+                if (childResp.statusCode() != 200) return error(testcase, cm1, cm2, cm3, cm5, cm4);
 
                 RunnerNode[] children = mapper.readValue(childResp.body(), RunnerNode[].class);
-                if (children.length != testcase.getF()) return error(testcase, dp1, dp2, dp3, dp5, dp4);
+                if (children.length != testcase.getF()) return error(testcase, cm1, cm2, cm3, cm5, cm4);
 
                 if (nodeDepth + 1 < testcase.getD()) {
                     for (RunnerNode child : children) {
@@ -173,13 +173,13 @@ public class TestRunner {
                 }
             }
 
-            dp5 = MetricsAccumulator.overfetch(TestConfig.K_MAX, testcase.getK(), testcase.getD(), testcase.getF());
-            dp4 = MetricsAccumulator.underfetch(dp1);
+            cm5 = MetricsAccumulator.overfetch(TestConfig.K_MAX, testcase.getK(), testcase.getD(), testcase.getF());
+            cm4 = MetricsAccumulator.underfetch(cm1);
 
-            return new RunResult(testcase, dp1, dp2, dp3, dp5, dp4, "ok");
+            return new RunResult(testcase, cm1, cm2, cm3, cm5, cm4, "ok");
 
         } catch (Exception e) {
-            return error(testcase, dp1, dp2, dp3, dp5, dp4);
+            return error(testcase, cm1, cm2, cm3, cm5, cm4);
         }
     }
 
@@ -188,58 +188,58 @@ public class TestRunner {
      * Non-zero overfetch means the query was built incorrectly → status=error.
      */
     private RunResult runGraphQL(TestCase tescase) {
-        int dp1 = 0;
-        int dp2 = 0;
-        int dp3 = 0;
-        int dp4 = 0;
-        int dp5 = 0;
+        int cm1 = 0;
+        int cm2 = 0;
+        int cm3 = 0;
+        int cm4 = 0;
+        int cm5 = 0;
 
         try {
             HttpResponse<String> resp = graphQLClient.fetch(tescase.getD(), tescase.getK());
-            dp1++;
-            dp2 += MetricsAccumulator.orchestrationCount(resp);
-            dp3 += MetricsAccumulator.contentLength(resp);
-            dp4 = MetricsAccumulator.underfetch(dp1);
+            cm1++;
+            cm2 += MetricsAccumulator.orchestrationCount(resp);
+            cm3 += MetricsAccumulator.contentLength(resp);
+            cm4 = MetricsAccumulator.underfetch(cm1);
 
-            if (resp.statusCode() != 200) return error(tescase, dp1, dp2, dp3, dp5, dp4);
+            if (resp.statusCode() != 200) return error(tescase, cm1, cm2, cm3, cm5, cm4);
 
-            dp5 = MetricsAccumulator.overfetchGraphQL(resp.body(), tescase.getK());
-            if (dp5 != 0) return new RunResult(tescase, dp1, dp2, dp3, dp5, dp4, "error");
+            cm5 = MetricsAccumulator.overfetchGraphQL(resp.body(), tescase.getK());
+            if (cm5 != 0) return new RunResult(tescase, cm1, cm2, cm3, cm5, cm4, "error");
 
             if (!MetricsAccumulator.verifyTreeShape(resp.body(), tescase.getD(), tescase.getF()))
-                return error(tescase, dp1, dp2, dp3, dp5, dp4);
+                return error(tescase, cm1, cm2, cm3, cm5, cm4);
 
-            return new RunResult(tescase, dp1, dp2, dp3, dp5, dp4, "ok");
+            return new RunResult(tescase, cm1, cm2, cm3, cm5, cm4, "ok");
 
         } catch (Exception e) {
-            return error(tescase, dp1, dp2, dp3, dp5, dp4);
+            return error(tescase, cm1, cm2, cm3, cm5, cm4);
         }
     }
 
     /**
      * gRPC run: single RPC call returns the full tree.
-     * DP1=1 always. DP2 and DP3 come from GrpcClient.GrpcResult.
+     * CM1=1 always. CM2 and CM3 come from GrpcClient.GrpcResult.
      * gRPC has no field selection → overfetch = (K_MAX - K) × nodeCount.
      * gRPC fetches full tree in one call → underfetch = 0.
      */
     private RunResult runGrpc(TestCase tc) {
-        int dp1 = 0;
-        int dp2 = 0;
-        int dp3 = 0;
-        int dp4 = 0;
-        int dp5 = 0;
+        int cm1 = 0;
+        int cm2 = 0;
+        int cm3 = 0;
+        int cm4 = 0;
+        int cm5 = 0;
 
         try {
             GrpcClient.GrpcResult result = grpcClient.fetch(tc.getD());
-            dp1++;
-            dp2 = MetricsAccumulator.orchestrationCount(result);
-            dp3 = MetricsAccumulator.contentLength(result);
+            cm1++;
+            cm2 = MetricsAccumulator.orchestrationCount(result);
+            cm3 = MetricsAccumulator.contentLength(result);
             if (!MetricsAccumulator.verifyTreeShape(result.response(), tc.getD(), tc.getF()))
-                return error(tc, dp1, dp2, dp3, dp5, dp4);
+                return error(tc, cm1, cm2, cm3, cm5, cm4);
 
-            dp5 = MetricsAccumulator.overfetch(TestConfig.K_MAX, tc.getK(), tc.getD(), tc.getF());
-            dp4 = MetricsAccumulator.underfetch(dp1);
-            return new RunResult(tc, dp1, dp2, dp3, dp5, dp4, "ok");
+            cm5 = MetricsAccumulator.overfetch(TestConfig.K_MAX, tc.getK(), tc.getD(), tc.getF());
+            cm4 = MetricsAccumulator.underfetch(cm1);
+            return new RunResult(tc, cm1, cm2, cm3, cm5, cm4, "ok");
         } catch (Exception e) {
             return new RunResult(tc, 1, 0, 0, 0, 0, "error");
         }
@@ -278,7 +278,7 @@ public class TestRunner {
         }
     }
 
-    private RunResult error(TestCase testcase, int dp1, int dp2, int dp3, int dp5, int dp4) {
-        return new RunResult(testcase, dp1, dp2, dp3, dp5, dp4, "error");
+    private RunResult error(TestCase testcase, int cm1, int cm2, int cm3, int cm5, int cm4) {
+        return new RunResult(testcase, cm1, cm2, cm3, cm5, cm4, "error");
     }
 }

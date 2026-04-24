@@ -9,7 +9,7 @@ import se.lnu.data.DataStore;
  * gRPC service implementation — returns the full tree in one response.
  *
  * Builds the Node tree recursively from DataStore and returns it as a
- * single TreeResponse. DP2 is tracked via OrchestrationGrpcInterceptor.
+ * single TreeResponse. CM2 is tracked via OrchestrationGrpcInterceptor.
  */
 @Component
 public class GrpcService extends TreeServiceGrpc.TreeServiceImplBase {

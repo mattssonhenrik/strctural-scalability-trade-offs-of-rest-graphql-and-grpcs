@@ -1,7 +1,7 @@
 package se.lnu.metrics;
 
 /**
- * Counts DataStore read operations (DP2) per HTTP request.
+ * Counts DataStore read operations (CM2) per HTTP request.
  *
  */
 public class OrchestrationCounter {
