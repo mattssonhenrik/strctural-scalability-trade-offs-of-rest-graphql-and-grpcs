@@ -108,10 +108,12 @@ def plot_csv(path: str) -> str:
     sweep_max   = int(df[x_col].max())
     title       = f"RQ1 — {series_name}-serie {sweep_min}–{sweep_max}  ({fixed})"
 
+   
     n_metrics = len(METRICS)
+    config_label = f"{series_name}-series {sweep_min}–{sweep_max}  |  {fixed}"
     fig = make_subplots(
         rows=1, cols=n_metrics,
-        subplot_titles=[label for _, label in METRICS],
+        subplot_titles=[f"{label}<br><sup>{config_label}</sup>" for _, label in METRICS],
         horizontal_spacing=0.06,
     )
 
@@ -145,33 +147,13 @@ def plot_csv(path: str) -> str:
         fig.update_xaxes(title_text=x_col, row=1, col=col_idx, dtick=1)
         fig.update_yaxes(title_text="Värde", row=1, col=col_idx)
 
-    # y-axelnamn för alla subplots: yaxis, yaxis2, yaxis3, ...
-    yaxis_keys = ["yaxis"] + [f"yaxis{i}" for i in range(2, n_metrics + 1)]
-
     fig.update_layout(
-        title=dict(text=title, font=dict(size=16), x=0.5),
-        height=480,
-        legend=dict(orientation="h", yanchor="bottom", y=1.08, xanchor="center", x=0.5),
+        title=dict(text=title, font=dict(size=16), x=0.5, y=0.98),
+        height=520,
+        margin=dict(t=110),
+        legend=dict(orientation="h", yanchor="top", y=1.25, xanchor="auto", x=0.5),
         plot_bgcolor="#fafafa",
         paper_bgcolor="#ffffff",
-        updatemenus=[dict(
-            type="buttons",
-            direction="right",
-            x=1.0, y=1.18,
-            xanchor="right", yanchor="top",
-            buttons=[
-                dict(
-                    label="Linjär",
-                    method="relayout",
-                    args=[{f"{k}.type": "linear" for k in yaxis_keys}],
-                ),
-                dict(
-                    label="Logaritmisk",
-                    method="relayout",
-                    args=[{f"{k}.type": "log" for k in yaxis_keys}],
-                ),
-            ],
-        )],
     )
 
     basename = os.path.splitext(os.path.basename(path))[0]

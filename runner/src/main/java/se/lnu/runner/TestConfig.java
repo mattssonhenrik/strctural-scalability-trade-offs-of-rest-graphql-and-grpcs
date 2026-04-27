@@ -9,17 +9,17 @@ package se.lnu.runner;
  */
 public class TestConfig {
 
-    public static int D_BASELINE = 2;
-    public static int F_BASELINE = 2;
-    public static int K_BASELINE = 2;
+    public static int D_BASELINE = 7;
+    public static int F_BASELINE = 7;
+    public static int K_BASELINE = 7;
     public static int S_BASELINE = 16;
 
     public static int SWEEP_MIN = 0;
     // Careful rest over 10 can be exausting
-    public static int SWEEP_MAX = 2;
+    public static int SWEEP_MAX = 7;
 
     // Dataset is always generated with K_MAX fields, target K varies per test case
-    public static int K_MAX = 2;
+    public static int K_MAX = 7;
 
     // RQ2: explicit S values to sweep — add or remove values freely
     public static int[] S_SWEEP_VALUES = { 5000, 10000, 20000, 50000, 100000 };
